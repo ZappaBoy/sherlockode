@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from pydantic import BaseModel
 
-from sherlockode.config.settings import Settings
+from sherlockcode.config.settings import Settings
 
 PYPROJECT_A = '[project]\nname = "a"\nrequires-python = ">=3.11"\ndependencies = ["fastapi>=0.110"]\n'
 

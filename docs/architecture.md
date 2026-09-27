@@ -1,21 +1,28 @@
 # Architecture
 
+See also: [`configuration.md`](configuration.md) for the full settings reference and
+[`agent-backends.md`](agent-backends.md) for backend setup details.
+
 ## Package layout
 
 ```text
-src/sherlockode/
+sherlockcode/
 ├── cli.py                 Typer CLI (ask, repos, groups, sync, config, investigations)
 ├── app.py                 Composition root: wires settings, providers, workspace, git, sandbox
 ├── config/                Pydantic settings: TOML + .env + environment, config section models
 ├── domain/                Provider-independent models: repositories, commits, work items, evidence
 ├── git/                   Async git CLI client, hardened against repository-provided hooks/helpers
-├── providers/             Provider base + capability mixins, GitHub, GitLab, generic Git, registry, MCP
+├── providers/             Provider base + capability mixins, GitHub, GitLab, generic Git, MCP, registry
 ├── catalog/               Repository catalog: explicit + discovered repos, include/exclude, groups, scope
-├── workspace/             On-disk layout and checkout management
-├── analysis/              Deterministic, read-only analyzers (languages, python_versions, dependencies)
-├── sandbox/               Execution sandbox: Docker (default) and local (development only)
-├── agent/                 PydanticAI agents, instructions, dependencies and toolsets
-└── investigation/         Lifecycle service, recorder (trace + evidence ledger), models, rendering
+├── workspace/              On-disk layout and checkout management
+├── analysis/               Deterministic, read-only analyzers (languages, python_versions, dependencies)
+├── sandbox/                Execution sandbox: Docker (default) and local (development only)
+├── agent/                  Agent backends, instructions, dependencies and toolsets
+│   ├── backend.py          PydanticAI backend and Claude Code / Codex CLI backends (build_backend)
+│   ├── factory.py          Builds the PydanticAI investigator/planner agents and their toolsets
+│   ├── toolsets/           Native tool implementations (catalog, git, provider, analysis, evidence, recording)
+│   └── prompts/            Prompt rendering (Jinja templates under `templates/`)
+└── investigation/          Lifecycle service, recorder (trace + evidence ledger), models, rendering
 ```
 
 ## Investigation lifecycle
@@ -42,6 +49,42 @@ question ─► scope resolution ─► planner agent ─► investigator agent 
 
 Usage limits (`limits.max_agent_requests`, `limits.max_tool_calls`) are shared by planner and
 investigator.
+
+## Agent backends
+
+`agent.backend` (`sherlockcode/agent/backend.py`, `build_backend`) selects which `InvestigationBackend`
+drives step 3 above:
+
+- **`pydantic-ai`** (`PydanticAiBackend`) — the in-process agent built by `agent/factory.py`
+  (`build_investigator`), with the full native/MCP toolset list from `build_toolsets`. `agent.model` is
+  any PydanticAI model string (e.g. `anthropic:claude-opus-5-5`); `resolve_model` builds an
+  `OpenAIChatModel` against `agent.base_url` instead when set, for OpenAI-compatible local/self-hosted
+  servers (Ollama, vLLM, LM Studio, llama.cpp, LiteLLM).
+- **`claude-code`** / **`codex`** (`CliAgentBackend` + `ClaudeCodeStrategy`/`CodexStrategy`) — the
+  planner is skipped entirely; the official CLI is invoked non-interactively (`claude -p ... --output-
+  format json --permission-mode bypassPermissions`, or `codex exec --sandbox read-only`) with its
+  working directory set to the synced checkouts, and asked to return JSON matching
+  `InvestigationAnswer.model_json_schema()` (prompt: `cli_agent.md.jinja`). A single retry is attempted
+  if the output isn't valid JSON. The CLI's own free-text citations (`path:line`, `repo@sha`) are
+  converted back into recorded `Evidence` entries by `_record_citations`, preserving the same
+  observed/computed/inferred discipline as the PydanticAI backend. Both CLIs run read-only
+  (`--allowedTools` restricted to read/log/diff/blame commands for Claude Code; `--sandbox read-only`
+  for Codex) and rely on the CLI's own authentication (`claude login`/`ANTHROPIC_API_KEY`, `codex
+  login`/`OPENAI_API_KEY`) rather than any key configured for Sherlockcode itself.
+
+## Prompts
+
+Agent instructions and prompts are Jinja2 templates under `sherlockcode/agent/prompts/templates/`,
+rendered by `sherlockcode/agent/prompts/__init__.py` with `StrictUndefined` (a missing template variable
+is an error, not silent blank text):
+
+| Template                      | Used for |
+|--------------------------------|----------|
+| `investigator.md.jinja`        | Static instructions for the PydanticAI investigator agent |
+| `planner.md.jinja`             | Static instructions for the PydanticAI planner agent |
+| `environment.md.jinja`         | Dynamic per-run environment description (scope size, groups, providers and their capabilities/access path, analyzers, sandbox status, `agent.instructions`) — appended as a second instructions entry for both PydanticAI agents |
+| `investigation_prompt.md.jinja`| The user prompt sent to the PydanticAI investigator: question, scope, plan JSON |
+| `cli_agent.md.jinja`           | The full prompt sent to the Claude Code/Codex CLI: question, scope, plan JSON, environment description, repository list and the required output JSON schema |
 
 ## Evidence model
 
@@ -103,7 +146,7 @@ MCP tool calls are recorded as steps like any other tool.
 
 `Settings` (pydantic-settings) with sources in precedence order: init arguments, environment variables
 (`REPO_AGENT_` prefix, `__` nested delimiter), `.env`, TOML, defaults. Provider tokens also accept
-`REPO_AGENT_<PROVIDER>_TOKEN`. Secrets are `SecretStr` and are redacted in `sherlockode config` and in
+`REPO_AGENT_<PROVIDER>_TOKEN`. Secrets are `SecretStr` and are redacted in `sherlockcode config` and in
 investigation manifests. Unknown keys in config sections are rejected (`extra="forbid"`) to catch typos.
 
 ## Security boundaries
@@ -137,4 +180,5 @@ investigation manifests. Unknown keys in config sections are rejected (`extra="f
 | Analyzer          | `Analyzer` subclass, add to `AnalyzerRegistry` |
 | Agent tools       | a `FunctionToolset[InvestigationDeps]`, added in `build_toolsets` |
 | Sandbox backend   | `Sandbox` subclass implementing `_run`, selected in `build_sandbox` |
-| Model             | any PydanticAI model string in `agent.model` / `agent.planner_model` |
+| Model             | any PydanticAI model string in `agent.model` / `agent.planner_model`, or `agent.base_url` for an OpenAI-compatible local server |
+| CLI agent backend | `CliStrategy` implementation, registered in `_STRATEGIES` in `agent/backend.py` |

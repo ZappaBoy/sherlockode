@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from sherlockode.domain.repository import RepositoryRef
-from sherlockode.workspace import Workspace
+from sherlockcode.domain.repository import RepositoryRef
+from sherlockcode.workspace import Workspace
 
 
 def test_layout_and_investigation_sequence(tmp_path: Path) -> None:

@@ -1,7 +1,12 @@
 services:
-  sherlockode:
-    build: .
-    image: sherlockode:latest
+  sherlockcode:
+    build:
+      context: .
+      args:
+        # Set to "true" (or `INSTALL_AGENT_CLIS=true docker compose --profile build build`) to install
+        # the Claude Code and Codex CLIs, required for agent.backend = "claude-code" / "codex".
+        INSTALL_AGENT_CLIS: ${INSTALL_AGENT_CLIS:-false}
+    image: sherlockcode:latest
     env_file:
       - path: .env
         required: false
@@ -10,15 +15,22 @@ services:
       REPO_AGENT_SANDBOX__HOST_WORKSPACE: ${PWD}/workspace
     volumes:
       - ./workspace:/workspace
-      - ./sherlockode.toml:/config/sherlockode.toml:ro
+      - ./sherlockcode.toml:/config/sherlockcode.toml:ro
       # Grants control of the host Docker daemon. Prefer rootless Docker or a dedicated sandbox host.
       - /var/run/docker.sock:/var/run/docker.sock
+      # Mount cached Claude Code / Codex CLI login instead of passing an API key (see docs/agent-backends.md):
+      # - ~/.claude:/home/sherlock/.claude
+      # - ~/.codex:/home/sherlock/.codex
     group_add:
       - ${DOCKER_GID:-0}
+    # Required on Linux for agent.base_url pointing at http://host.docker.internal:<port>/v1 (a local
+    # LLM server such as Ollama running on the host). Docker Desktop provides this mapping already.
+    # extra_hosts:
+    #   - "host.docker.internal:host-gateway"
 
   sandbox-image:
     profiles: ["build"]
     build:
       context: docker
       dockerfile: sandbox.Dockerfile
-    image: sherlockode-sandbox:latest
+    image: sherlockcode-sandbox:latest

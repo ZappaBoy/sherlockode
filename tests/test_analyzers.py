@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from sherlockode.analysis import AnalysisTarget, default_analyzers
-from sherlockode.domain.repository import RepositoryRef
+from sherlockcode.analysis import AnalysisTarget, default_analyzers
+from sherlockcode.domain.repository import RepositoryRef
 
 
 def _target(tmp_path: Path, files: dict[str, str]) -> AnalysisTarget:

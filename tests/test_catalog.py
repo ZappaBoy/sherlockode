@@ -1,9 +1,19 @@
+import httpx
 import pytest
 
-from sherlockode.catalog.catalog import CatalogSources, RepositoryCatalog, UnknownScopeError
-from sherlockode.config.models import GroupDefinition, ProviderConfig, RepositoriesConfig
-from sherlockode.domain.repository import RepositoryRef
-from sherlockode.providers.registry import ProviderSet, default_registry
+from sherlockcode.catalog.catalog import CatalogSources, RepositoryCatalog, UnknownScopeError
+from sherlockcode.config.models import (
+    DiscoveryMode,
+    GroupDefinition,
+    ProviderConfig,
+    RepositoriesConfig,
+    RepositoriesMode,
+)
+from sherlockcode.domain.repository import RepositoryRef
+from sherlockcode.providers.base import ProviderContext
+from sherlockcode.providers.github import GitHubProvider
+from sherlockcode.providers.http import ProviderHttpClient
+from sherlockcode.providers.registry import ProviderSet, default_registry
 
 
 def _providers() -> ProviderSet:
@@ -66,6 +76,39 @@ async def test_unknown_scope_is_reported() -> None:
 
     with pytest.raises(UnknownScopeError, match="nope"):
         catalog.resolve_scope(["nope"])
+
+
+def _discovery_providers(exclude: list[str] | None = None) -> ProviderSet:
+    def handler(request: httpx.Request) -> httpx.Response:
+        data = [
+            {"name": "keep", "clone_url": "https://github.com/o/keep.git", "full_name": "o/keep"},
+            {"name": "skip", "clone_url": "https://github.com/o/skip.git", "full_name": "o/skip"},
+        ]
+        return httpx.Response(200, json=data)
+
+    config = ProviderConfig(kind="github", discovery=DiscoveryMode.ALL, exclude=exclude or [])
+    provider = GitHubProvider(ProviderContext(name="github", config=config))
+    provider.http = ProviderHttpClient(
+        httpx.AsyncClient(base_url=provider.base_url, transport=httpx.MockTransport(handler))
+    )
+    return ProviderSet({"github": provider}, "github")
+
+
+async def test_provider_exclude_filters_discovered_repositories_only() -> None:
+    sources = CatalogSources(repositories=RepositoriesConfig(), groups={}, default_scope=[])
+
+    catalog = await RepositoryCatalog.load(sources, _discovery_providers(exclude=["skip"]))
+
+    assert [r.name for r in catalog.repositories] == ["keep"]
+
+
+async def test_repositories_mode_explicit_disables_all_provider_discovery() -> None:
+    repositories = RepositoriesConfig(mode=RepositoriesMode.EXPLICIT)
+    sources = CatalogSources(repositories=repositories, groups={}, default_scope=[])
+
+    catalog = await RepositoryCatalog.load(sources, _discovery_providers())
+
+    assert catalog.repositories == []
 
 
 def test_duplicate_names_are_qualified() -> None:

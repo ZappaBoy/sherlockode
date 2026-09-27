@@ -1,6 +1,6 @@
 .git
 .venv
-workspace
+/workspace
 tests
 **/__pycache__
 .env

@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from sherlockode.config import ProviderIntegration, load_settings
-from sherlockode.config.models import ProviderConfig
+from sherlockcode.config import ProviderIntegration, load_settings
+from sherlockcode.config.models import DiscoveryMode, ProviderConfig, RepositoriesConfig, RepositoriesMode
 
 CONFIG = """
 workspace = "from-toml"
@@ -35,7 +35,7 @@ memory = "2g"
 
 @pytest.fixture
 def config_file(tmp_path: Path, clean_environment: None) -> Path:
-    path = tmp_path / "sherlockode.toml"
+    path = tmp_path / "sherlockcode.toml"
     path.write_text(CONFIG)
     return path
 
@@ -100,3 +100,30 @@ def test_mcp_integration_requires_server() -> None:
 def test_http_mcp_server_requires_url() -> None:
     with pytest.raises(ValidationError):
         ProviderConfig(kind="github", integration=ProviderIntegration.MCP, mcp={"transport": "http"})
+
+
+def test_discovery_defaults_to_namespaces_when_namespaces_given() -> None:
+    assert ProviderConfig(kind="github", namespaces=["o"]).discovery == DiscoveryMode.NAMESPACES
+
+
+def test_discovery_defaults_to_none_without_namespaces() -> None:
+    assert ProviderConfig(kind="github").discovery == DiscoveryMode.NONE
+
+
+def test_discovery_mode_all_does_not_require_namespaces() -> None:
+    assert ProviderConfig(kind="github", discovery=DiscoveryMode.ALL).discovery == DiscoveryMode.ALL
+
+
+def test_discovery_namespaces_mode_requires_namespaces() -> None:
+    with pytest.raises(ValidationError):
+        ProviderConfig(kind="github", discovery=DiscoveryMode.NAMESPACES)
+
+
+def test_generic_git_provider_cannot_enable_discovery() -> None:
+    with pytest.raises(ValidationError):
+        ProviderConfig(kind="git", discovery=DiscoveryMode.ALL)
+
+
+def test_repositories_explicit_mode_is_a_valid_value() -> None:
+    config = RepositoriesConfig.model_validate({"mode": "explicit"})
+    assert config.mode == RepositoriesMode.EXPLICIT

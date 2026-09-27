@@ -7,15 +7,15 @@ import pytest
 from pydantic import ValidationError
 from pydantic_ai import PrefixedToolset
 
-from sherlockode.config.models import ProviderConfig
-from sherlockode.domain.activity import WorkItemQuery, WorkItemState
-from sherlockode.domain.repository import RepositoryRef
-from sherlockode.providers import ApiRequest, ProviderCapability, ProviderContext
-from sherlockode.providers.github import GitHubProvider
-from sherlockode.providers.gitlab import GitLabProvider
-from sherlockode.providers.hosted import HostedProvider
-from sherlockode.providers.http import ProviderHttpClient
-from sherlockode.providers.mcp import build_mcp_toolset, uses_mcp, uses_native_tools
+from sherlockcode.config.models import ProviderConfig
+from sherlockcode.domain.activity import WorkItemQuery, WorkItemState
+from sherlockcode.domain.repository import RepositoryRef
+from sherlockcode.providers import ApiRequest, ProviderCapability, ProviderContext
+from sherlockcode.providers.github import GitHubProvider
+from sherlockcode.providers.gitlab import GitLabProvider
+from sherlockcode.providers.hosted import HostedProvider
+from sherlockcode.providers.http import ProviderHttpClient
+from sherlockcode.providers.mcp import build_mcp_toolset, uses_mcp, uses_native_tools
 
 Handler = Callable[[httpx.Request], httpx.Response]
 
@@ -34,13 +34,15 @@ def _json(data: object, headers: dict[str, str] | None = None) -> httpx.Response
     )
 
 
-def _github(handler: Handler, namespaces: list[str] | None = None) -> GitHubProvider:
-    config = ProviderConfig(kind="github", token="t", namespaces=namespaces or [])
+def _github(handler: Handler, namespaces: list[str] | None = None, discovery: str | None = None) -> GitHubProvider:
+    config = ProviderConfig(kind="github", token="t", namespaces=namespaces or [], discovery=discovery)
     return _with_transport(GitHubProvider(ProviderContext(name="github", config=config)), handler)
 
 
-def _gitlab(handler: Handler, namespaces: list[str] | None = None) -> GitLabProvider:
-    config = ProviderConfig(kind="gitlab", base_url="https://gitlab.example.com/api/v4", namespaces=namespaces or [])
+def _gitlab(handler: Handler, namespaces: list[str] | None = None, discovery: str | None = None) -> GitLabProvider:
+    config = ProviderConfig(
+        kind="gitlab", base_url="https://gitlab.example.com/api/v4", namespaces=namespaces or [], discovery=discovery
+    )
     return _with_transport(GitLabProvider(ProviderContext(name="gitlab", config=config)), handler)
 
 
@@ -71,6 +73,52 @@ async def test_github_discovery_follows_pagination_and_skips_archived() -> None:
     repositories = await _github(handler, ["o"]).discover_repositories()
 
     assert [(r.name, r.full_path) for r in repositories] == [("r1", "o/r1"), ("r2", "o/r2")]
+
+
+async def test_github_discovery_mode_all_queries_user_repos() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/user/repos"
+        assert request.url.params["affiliation"] == "owner,collaborator,organization_member"
+        return _json([{"name": "r", "clone_url": "https://github.com/o/r.git", "full_name": "o/r"}])
+
+    repositories = await _github(handler, discovery="all").discover_repositories()
+
+    assert [r.full_path for r in repositories] == ["o/r"]
+
+
+async def test_github_discovery_mode_none_skips_discovery() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("no request should be made when discovery is disabled")
+
+    repositories = await _github(handler, namespaces=["o"], discovery="none").discover_repositories()
+
+    assert repositories == []
+
+
+async def test_gitlab_discovery_mode_all_uses_membership_projects() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path == "/api/v4/projects"
+        assert request.url.params["membership"] == "true"
+        assert request.url.params["archived"] == "false"
+        item = {
+            "path": "svc",
+            "http_url_to_repo": "https://gitlab.example.com/grp/svc.git",
+            "path_with_namespace": "grp/svc",
+        }
+        return _json([item])
+
+    repositories = await _gitlab(handler, discovery="all").discover_repositories()
+
+    assert [r.full_path for r in repositories] == ["grp/svc"]
+
+
+async def test_gitlab_discovery_mode_none_skips_discovery() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        raise AssertionError("no request should be made when discovery is disabled")
+
+    repositories = await _gitlab(handler, namespaces=["grp"], discovery="none").discover_repositories()
+
+    assert repositories == []
 
 
 async def test_github_merged_change_requests() -> None:

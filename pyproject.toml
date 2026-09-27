@@ -1,5 +1,5 @@
 [project]
-name = "sherlockode"
+name = "sherlockcode"
 version = "0.1.0"
 description = "Agentic intelligence platform for investigating software repositories across Git providers."
 readme = "README.md"
@@ -12,10 +12,11 @@ dependencies = [
     "httpx>=0.28",
     "typer>=0.16",
     "rich>=14.0",
+    "jinja2>=3.1.6",
 ]
 
 [project.scripts]
-sherlockode = "sherlockode.cli:app"
+sherlockcode = "sherlockcode.cli:app"
 
 [dependency-groups]
 dev = [
@@ -30,7 +31,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/sherlockode"]
+packages = ["sherlockcode"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -40,7 +41,7 @@ asyncio_default_fixture_loop_scope = "function"
 [tool.ruff]
 line-length = 120
 target-version = "py312"
-src = ["src", "tests"]
+src = [".", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "SIM", "RUF", "PL", "PTH", "ASYNC"]
@@ -56,5 +57,5 @@ max-args = 5
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
-mypy_path = "src"
+mypy_path = "."
 disable_error_code = ["type-abstract"]

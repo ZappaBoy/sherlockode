@@ -1,0 +1,14 @@
+Investigation scope: {{ scope_count }} repositories. Logical groups: {{ groups }}.
+Providers:
+{% for provider in providers %}
+- {{ provider.name }} ({{ provider.kind }}): {{ provider.capabilities }}; via {{ provider.access }}
+{% endfor %}
+Analyzers (run_analyzer):
+{% for name, description in analyzers.items() %}
+- {{ name }}: {{ description }}
+{% endfor %}
+{{ sandbox_description }}
+{% if extra_instructions %}
+Organization guidance:
+{{ extra_instructions }}
+{% endif %}
