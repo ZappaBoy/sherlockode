@@ -1,0 +1,10 @@
+Question: {{ question }}
+{% if scope %}
+
+Requested scope: {{ scope | join(', ') }}
+{% endif %}
+{% if plan_json %}
+
+Investigation plan:
+{{ plan_json }}
+{% endif %}
