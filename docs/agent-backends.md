@@ -45,7 +45,7 @@ base_url = "http://localhost:11434/v1"     # Ollama's OpenAI-compatible endpoint
 # LOCAL_LLM_API_KEY=not-needed
 ```
 
-Running Sherlockcode itself in Docker: `localhost` inside the container is the container, not the
+Running Sherlockode itself in Docker: `localhost` inside the container is the container, not the
 host. Point `base_url` at the Docker host instead:
 
 ```toml
@@ -56,7 +56,7 @@ base_url = "http://host.docker.internal:11434/v1"
 ```yaml
 # compose.yaml, on Linux only (Docker Desktop provides host.docker.internal already)
 services:
-  sherlockcode:
+  sherlockode:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 ```
@@ -76,7 +76,7 @@ model = "claude-opus-5-5"      # optional; omit to use the CLI's own default
 cli_timeout_seconds = 600
 ```
 
-Authenticate the CLI itself, not Sherlockcode:
+Authenticate the CLI itself, not Sherlockode:
 
 ```bash
 claude login          # caches credentials under ~/.claude
@@ -107,14 +107,14 @@ codex login            # caches credentials under ~/.codex
 export OPENAI_API_KEY=sk-...
 ```
 
-Do not add `--full-auto` to `agent.cli_args`: Sherlockcode always invokes Codex with
+Do not add `--full-auto` to `agent.cli_args`: Sherlockode always invokes Codex with
 `--sandbox read-only`, and `--full-auto` conflicts with an explicit `--sandbox` flag. Any extra flags
 in `cli_args` are appended after the built-in ones and before the prompt argument.
 
 ## Common notes
 
 - Both CLI backends require the CLI binary (and, for Claude Code, Node.js) to be present in the
-  environment `sherlockcode` runs in. The application Docker image only installs them when built with
+  environment `sherlockode` runs in. The application Docker image only installs them when built with
   `--build-arg INSTALL_AGENT_CLIS=true` (see the README's [Docker section](../README.md#docker)).
 - `agent.instructions` (extra organization-specific guidance) and the environment description
   (scope, groups, providers, analyzers, sandbox status) are included in both the PydanticAI prompts and

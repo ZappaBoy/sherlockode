@@ -4,10 +4,10 @@ from pathlib import Path
 
 import pytest
 
-from sherlockcode.config.models import SandboxConfig
-from sherlockcode.sandbox import ExecutionRequest, ScriptLanguage
-from sherlockcode.sandbox.docker import DockerSandbox, PathMapper
-from sherlockcode.sandbox.local import LocalSandbox, parse_size
+from sherlockode.config.models import SandboxConfig
+from sherlockode.sandbox import ExecutionRequest, ScriptLanguage
+from sherlockode.sandbox.docker import DockerSandbox, PathMapper
+from sherlockode.sandbox.local import LocalSandbox, parse_size
 
 
 @pytest.mark.skipif(shutil.which("prlimit") is None, reason="prlimit not available")
@@ -52,7 +52,7 @@ def test_docker_command_is_locked_down(tmp_path: Path) -> None:
     for flag in ("--network none", "--read-only", "--cap-drop ALL", "no-new-privileges", "--user 65534:65534"):
         assert flag in command
     assert "source=/host/ws/repositories/r,target=/repo,readonly" in command
-    assert argv[-7:] == ["sherlockcode-sandbox:latest", "timeout", "-s", "KILL", "30", "sh", "/work/script.sh"]
+    assert argv[-7:] == ["sherlockode-sandbox:latest", "timeout", "-s", "KILL", "30", "sh", "/work/script.sh"]
 
 
 def test_parse_size() -> None:
@@ -60,7 +60,7 @@ def test_parse_size() -> None:
     assert parse_size("512m") == 512 * 1024**2
 
 
-@pytest.mark.skipif(not os.environ.get("SHERLOCKCODE_SANDBOX_IMAGE"), reason="set SHERLOCKCODE_SANDBOX_IMAGE to run")
+@pytest.mark.skipif(not os.environ.get("SHERLOCKODE_SANDBOX_IMAGE"), reason="set SHERLOCKODE_SANDBOX_IMAGE to run")
 async def test_docker_sandbox_isolation(tmp_path: Path) -> None:
     repository = tmp_path / "repositories" / "r"
     repository.mkdir(parents=True)
@@ -73,7 +73,7 @@ async def test_docker_sandbox_isolation(tmp_path: Path) -> None:
         "print(os.getuid())\n"
         "pathlib.Path(os.environ['OUTPUT_DIR'], 'out.txt').write_text('ok')\n"
     )
-    config = SandboxConfig(image=os.environ["SHERLOCKCODE_SANDBOX_IMAGE"])
+    config = SandboxConfig(image=os.environ["SHERLOCKODE_SANDBOX_IMAGE"])
     sandbox = DockerSandbox(config, PathMapper(tmp_path, None))
     request = ExecutionRequest(
         script=script, language=ScriptLanguage.PYTHON, repository=repository, run_directory=tmp_path / "run"

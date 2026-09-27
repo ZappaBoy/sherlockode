@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from sherlockcode.domain.activity import RefKind
-from sherlockcode.git import CloneRequest, GitClient, GrepQuery, LogQuery
+from sherlockode.domain.activity import RefKind
+from sherlockode.git import CloneRequest, GitClient, GrepQuery, LogQuery
 
 
 @pytest.fixture

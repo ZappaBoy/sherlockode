@@ -6,7 +6,7 @@ See also: [`configuration.md`](configuration.md) for the full settings reference
 ## Package layout
 
 ```text
-sherlockcode/
+sherlockode/
 ├── cli.py                 Typer CLI (ask, repos, groups, sync, config, investigations)
 ├── app.py                 Composition root: wires settings, providers, workspace, git, sandbox
 ├── config/                Pydantic settings: TOML + .env + environment, config section models
@@ -52,7 +52,7 @@ investigator.
 
 ## Agent backends
 
-`agent.backend` (`sherlockcode/agent/backend.py`, `build_backend`) selects which `InvestigationBackend`
+`agent.backend` (`sherlockode/agent/backend.py`, `build_backend`) selects which `InvestigationBackend`
 drives step 3 above:
 
 - **`pydantic-ai`** (`PydanticAiBackend`) — the in-process agent built by `agent/factory.py`
@@ -70,12 +70,12 @@ drives step 3 above:
   observed/computed/inferred discipline as the PydanticAI backend. Both CLIs run read-only
   (`--allowedTools` restricted to read/log/diff/blame commands for Claude Code; `--sandbox read-only`
   for Codex) and rely on the CLI's own authentication (`claude login`/`ANTHROPIC_API_KEY`, `codex
-  login`/`OPENAI_API_KEY`) rather than any key configured for Sherlockcode itself.
+  login`/`OPENAI_API_KEY`) rather than any key configured for Sherlockode itself.
 
 ## Prompts
 
-Agent instructions and prompts are Jinja2 templates under `sherlockcode/agent/prompts/templates/`,
-rendered by `sherlockcode/agent/prompts/__init__.py` with `StrictUndefined` (a missing template variable
+Agent instructions and prompts are Jinja2 templates under `sherlockode/agent/prompts/templates/`,
+rendered by `sherlockode/agent/prompts/__init__.py` with `StrictUndefined` (a missing template variable
 is an error, not silent blank text):
 
 | Template                      | Used for |
@@ -146,7 +146,7 @@ MCP tool calls are recorded as steps like any other tool.
 
 `Settings` (pydantic-settings) with sources in precedence order: init arguments, environment variables
 (`REPO_AGENT_` prefix, `__` nested delimiter), `.env`, TOML, defaults. Provider tokens also accept
-`REPO_AGENT_<PROVIDER>_TOKEN`. Secrets are `SecretStr` and are redacted in `sherlockcode config` and in
+`REPO_AGENT_<PROVIDER>_TOKEN`. Secrets are `SecretStr` and are redacted in `sherlockode config` and in
 investigation manifests. Unknown keys in config sections are rejected (`extra="forbid"`) to catch typos.
 
 ## Security boundaries

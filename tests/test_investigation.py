@@ -5,11 +5,11 @@ import pytest
 from pydantic_ai import ModelMessage, ModelResponse, ToolCallPart, ToolReturnPart
 from pydantic_ai.models.function import AgentInfo, FunctionModel
 
-from sherlockcode.app import Application
-from sherlockcode.catalog.catalog import UnknownScopeError
-from sherlockcode.config.settings import Settings
-from sherlockcode.investigation.models import InvestigationRequest, InvestigationStatus
-from sherlockcode.investigation.service import InvestigationService
+from sherlockode.app import Application
+from sherlockode.catalog.catalog import UnknownScopeError
+from sherlockode.config.settings import Settings
+from sherlockode.investigation.models import InvestigationRequest, InvestigationStatus
+from sherlockode.investigation.service import InvestigationService
 
 PLAN = {
     "objective": "Count Python repositories declaring a Python version below 3.12",

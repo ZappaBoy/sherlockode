@@ -8,7 +8,7 @@ import pytest
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.usage import RunUsage, UsageLimits
 
-from sherlockcode.agent.backend import (
+from sherlockode.agent.backend import (
     ClaudeCodeStrategy,
     CliAgentBackend,
     CodexStrategy,
@@ -16,14 +16,14 @@ from sherlockcode.agent.backend import (
     PydanticAiBackend,
     build_backend,
 )
-from sherlockcode.agent.deps import InvestigationDeps
-from sherlockcode.agent.factory import resolve_model
-from sherlockcode.app import Application
-from sherlockcode.config.models import AgentBackend, AgentConfig
-from sherlockcode.config.settings import Settings
-from sherlockcode.investigation.models import InvestigationRequest
-from sherlockcode.investigation.recorder import InvestigationRecorder
-from sherlockcode.process import CommandResult
+from sherlockode.agent.deps import InvestigationDeps
+from sherlockode.agent.factory import resolve_model
+from sherlockode.app import Application
+from sherlockode.config.models import AgentBackend, AgentConfig
+from sherlockode.config.settings import Settings
+from sherlockode.investigation.models import InvestigationRequest
+from sherlockode.investigation.recorder import InvestigationRecorder
+from sherlockode.process import CommandResult
 
 _USAGE = RunUsage()
 _LIMITS = UsageLimits()

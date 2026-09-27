@@ -1,0 +1,145 @@
+# Sherlockode configuration.
+# Precedence: environment variables > .env > this file > defaults.
+# Every key can be overridden with REPO_AGENT_<SECTION>__<KEY>, e.g. REPO_AGENT_SANDBOX__MEMORY=2g.
+# Secrets never belong here: use REPO_AGENT_<PROVIDER>_TOKEN.
+
+workspace = "workspace"
+log_level = "INFO"
+
+# --- Providers ---------------------------------------------------------------
+# `kind` selects the implementation: git, github, gitlab (more can be registered).
+# `integration` selects how provider APIs reach the agent: native tools, the official MCP server, or both.
+# `discovery` selects the repository selection mode for this provider: "none" (default when `namespaces`
+# is empty), "namespaces" (discover only under `namespaces`), or "all" (every repository the token can
+# access). Every mode below can still ignore repositories with `exclude` (per-provider) or the global
+# `[repositories] exclude`.
+
+# (a) All repositories on a provider the token can access:
+[providers.gitlab]
+kind = "gitlab"
+base_url = "https://gitlab.example.com/api/v4"
+discovery = "all"                 # every project REPO_AGENT_GITLAB_TOKEN can see
+include_archived = false
+integration = "both"
+exclude = ["*-archive", "sandbox-*"]   # ignored even though discovery finds them
+
+[providers.gitlab.mcp]
+transport = "http"
+url = "https://gitlab.example.com/api/v4/mcp"
+forward_token = true
+
+# (b) All repositories of specific groups/orgs (namespaces):
+[providers.github]
+kind = "github"
+namespaces = ["example", "example-labs"]   # organizations or users whose repositories are discovered
+# discovery = "namespaces"                 # default already, since `namespaces` is non-empty
+integration = "native"
+exclude = ["*-deprecated"]
+
+# Official GitHub MCP server over stdio, as an alternative to the native tools:
+# [providers.github]
+# integration = "mcp"
+# [providers.github.mcp]
+# transport = "stdio"
+# command = "docker"
+# args = ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "-e", "GITHUB_READ_ONLY=1",
+#         "ghcr.io/github/github-mcp-server"]
+# token_env = "GITHUB_PERSONAL_ACCESS_TOKEN"
+
+# --- Repositories ------------------------------------------------------------
+# (c) Only specific repositories: set mode = "explicit" to disable discovery on every provider above,
+# regardless of their own `discovery` setting, and rely solely on `include`.
+# (Left as "auto" here so examples (a) and (b) above stay active; switch to "explicit" to use only
+# the repositories listed below.)
+
+[repositories]
+mode = "auto"                     # "explicit" disables all provider discovery; only `include` is used
+include = [
+    "git@gitlab.example.com:platform/service-a.git",
+    "https://github.com/example/service-b.git",
+    { url = "https://git.example.org/legacy/project-x.git", name = "project-x", tags = ["legacy"] },
+]
+exclude = ["*-archive", "sandbox-*"]   # global: applies to discovered AND explicit repositories
+
+# --- Logical groups ----------------------------------------------------------
+# A list is shorthand for explicit members; tables add selectors (patterns, tags, providers, namespaces).
+
+[groups]
+backend = ["service-a", "service-b"]
+
+[groups.python]
+description = "Python services"
+repositories = ["service-a"]
+tags = ["python"]
+
+[groups.legacy]
+tags = ["legacy"]
+
+[groups.platform]
+providers = ["gitlab"]
+namespaces = ["platform*"]
+
+# --- Agent -------------------------------------------------------------------
+# `backend` selects how the investigating agent is driven. "claude-code"/"codex" skip the planner and
+# run read-only, using the official CLI's own tool loop instead of the toolsets below.
+
+[agent]
+backend = "pydantic-ai"                      # "pydantic-ai" (default), "claude-code", "codex"
+model = "anthropic:claude-opus-5-5"           # or "anthropic:claude-sonnet-5", "anthropic:claude-haiku-4-5"
+# planner_model = "anthropic:claude-sonnet-5" # optional, cheaper model for the planning phase
+default_scope = []                # groups or repositories; empty means everything
+planning = true
+# instructions = "Our services declare their Python version in .python-version."
+
+# Local LLM via an OpenAI-compatible API (Ollama, vLLM, LM Studio, llama.cpp server, LiteLLM),
+# still the "pydantic-ai" backend:
+# [agent]
+# backend = "pydantic-ai"
+# model = "qwen2.5-coder:32b"               # the model name/tag as the local server knows it
+# base_url = "http://localhost:11434/v1"    # http://host.docker.internal:11434/v1 when running in Docker
+# api_key_env = "LOCAL_LLM_API_KEY"         # only if the server requires a key
+
+# Claude Code CLI: authenticate with `claude login` (~/.claude) or ANTHROPIC_API_KEY, then:
+# [agent]
+# backend = "claude-code"
+# model = "claude-opus-5-5"                 # optional; omit for the CLI's own default
+# cli_timeout_seconds = 600
+
+# Codex CLI: authenticate with `codex login` (~/.codex) or OPENAI_API_KEY, then:
+# [agent]
+# backend = "codex"
+# model = "gpt-5-codex"                     # optional; omit for the CLI's own default
+# cli_timeout_seconds = 600
+# Do not add "--full-auto" to cli_args: Sherlockode always runs Codex with --sandbox read-only.
+
+# --- Execution limits --------------------------------------------------------
+
+[limits]
+max_repositories = 200
+max_agent_requests = 60
+max_tool_calls = 300
+max_file_bytes = 200000
+max_search_results = 200
+max_log_entries = 2000
+git_timeout_seconds = 600
+# clone_depth = 1                 # faster clones, but history questions become unanswerable
+
+# --- Sandbox -----------------------------------------------------------------
+
+[sandbox]
+enabled = true
+backend = "docker"                # "local" runs unisolated subprocesses: development only
+image = "sherlockode-sandbox:latest"
+# runtime = "runsc"               # gVisor for kernel-level isolation
+cpus = 1.0
+memory = "1g"
+pids_limit = 256
+timeout_seconds = 120
+network = "none"
+user = "65534:65534"
+
+# --- Storage -----------------------------------------------------------------
+
+[storage]
+# keep_investigations = 100
+save_config_snapshot = true

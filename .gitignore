@@ -217,7 +217,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Sherlockcode
+# Sherlockode
 /workspace/
 
 .idea

@@ -1,19 +1,19 @@
 import httpx
 import pytest
 
-from sherlockcode.catalog.catalog import CatalogSources, RepositoryCatalog, UnknownScopeError
-from sherlockcode.config.models import (
+from sherlockode.catalog.catalog import CatalogSources, RepositoryCatalog, UnknownScopeError
+from sherlockode.config.models import (
     DiscoveryMode,
     GroupDefinition,
     ProviderConfig,
     RepositoriesConfig,
     RepositoriesMode,
 )
-from sherlockcode.domain.repository import RepositoryRef
-from sherlockcode.providers.base import ProviderContext
-from sherlockcode.providers.github import GitHubProvider
-from sherlockcode.providers.http import ProviderHttpClient
-from sherlockcode.providers.registry import ProviderSet, default_registry
+from sherlockode.domain.repository import RepositoryRef
+from sherlockode.providers.base import ProviderContext
+from sherlockode.providers.github import GitHubProvider
+from sherlockode.providers.http import ProviderHttpClient
+from sherlockode.providers.registry import ProviderSet, default_registry
 
 
 def _providers() -> ProviderSet:

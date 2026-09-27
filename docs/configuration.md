@@ -1,9 +1,9 @@
 # Configuration reference
 
-Settings are loaded by `sherlockcode.config.settings.Settings` (pydantic-settings). Precedence, highest
+Settings are loaded by `sherlockode.config.settings.Settings` (pydantic-settings). Precedence, highest
 first: **environment variables → `.env` → TOML file → defaults**. Nested keys use `__` as the
 environment variable delimiter (e.g. `REPO_AGENT_SANDBOX__ENABLED=false`). The TOML file is
-`./sherlockcode.toml`, or the path given by `REPO_AGENT_CONFIG` / `--config`. Every section rejects
+`./sherlockode.toml`, or the path given by `REPO_AGENT_CONFIG` / `--config`. Every section rejects
 unknown keys (`extra="forbid"`), so a typo fails at startup instead of being silently ignored.
 
 Provider tokens additionally accept the shorthand `REPO_AGENT_<PROVIDER NAME>_TOKEN` (uppercased,
@@ -11,7 +11,7 @@ Provider tokens additionally accept the shorthand `REPO_AGENT_<PROVIDER NAME>_TO
 `REPO_AGENT_PROVIDERS__<NAME>__TOKEN`. A `git` provider is always present even if not configured
 explicitly (used for repositories with no matching host).
 
-Secrets (`SecretStr` fields) are redacted by `sherlockcode config` and in investigation manifests.
+Secrets (`SecretStr` fields) are redacted by `sherlockode config` and in investigation manifests.
 
 ## Top level
 
@@ -124,7 +124,7 @@ shorthand for `repositories`.
 |-------------------|--------------------------------|-------------------------------|------------------------|--------------|
 | `enabled`         | `bool`                        | `True`                        | `REPO_AGENT_SANDBOX__ENABLED` | When `false`, `run_in_sandbox` is removed from the agent entirely. |
 | `backend`         | `SandboxBackend` (`docker`, `local`) | `docker`               | `REPO_AGENT_SANDBOX__BACKEND` | `local` runs commands as host subprocesses with rlimits only — not an isolation boundary; development only. |
-| `image`           | `str`                         | `sherlockcode-sandbox:latest`  | `REPO_AGENT_SANDBOX__IMAGE` | Docker image for sandbox containers. |
+| `image`           | `str`                         | `sherlockode-sandbox:latest`  | `REPO_AGENT_SANDBOX__IMAGE` | Docker image for sandbox containers. |
 | `docker_binary`   | `str`                         | `docker`                      | `REPO_AGENT_SANDBOX__DOCKER_BINARY` | |
 | `runtime`         | `str \| None`                 | `None`                        | `REPO_AGENT_SANDBOX__RUNTIME` | Alternative OCI runtime for stronger isolation, e.g. `runsc` (gVisor) or `sysbox-runc`. |
 | `cpus`            | `float`                       | `1.0`                         | `REPO_AGENT_SANDBOX__CPUS` | |

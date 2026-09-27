@@ -1,12 +1,12 @@
 services:
-  sherlockcode:
+  sherlockode:
     build:
       context: .
       args:
         # Set to "true" (or `INSTALL_AGENT_CLIS=true docker compose --profile build build`) to install
         # the Claude Code and Codex CLIs, required for agent.backend = "claude-code" / "codex".
         INSTALL_AGENT_CLIS: ${INSTALL_AGENT_CLIS:-false}
-    image: sherlockcode:latest
+    image: sherlockode:latest
     env_file:
       - path: .env
         required: false
@@ -15,7 +15,7 @@ services:
       REPO_AGENT_SANDBOX__HOST_WORKSPACE: ${PWD}/workspace
     volumes:
       - ./workspace:/workspace
-      - ./sherlockcode.toml:/config/sherlockcode.toml:ro
+      - ./sherlockode.toml:/config/sherlockode.toml:ro
       # Grants control of the host Docker daemon. Prefer rootless Docker or a dedicated sandbox host.
       - /var/run/docker.sock:/var/run/docker.sock
       # Mount cached Claude Code / Codex CLI login instead of passing an API key (see docs/agent-backends.md):
@@ -33,4 +33,4 @@ services:
     build:
       context: docker
       dockerfile: sandbox.Dockerfile
-    image: sherlockcode-sandbox:latest
+    image: sherlockode-sandbox:latest

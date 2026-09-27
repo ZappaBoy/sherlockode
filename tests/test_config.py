@@ -3,8 +3,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from sherlockcode.config import ProviderIntegration, load_settings
-from sherlockcode.config.models import DiscoveryMode, ProviderConfig, RepositoriesConfig, RepositoriesMode
+from sherlockode.config import ProviderIntegration, load_settings
+from sherlockode.config.models import DiscoveryMode, ProviderConfig, RepositoriesConfig, RepositoriesMode
 
 CONFIG = """
 workspace = "from-toml"
@@ -35,7 +35,7 @@ memory = "2g"
 
 @pytest.fixture
 def config_file(tmp_path: Path, clean_environment: None) -> Path:
-    path = tmp_path / "sherlockcode.toml"
+    path = tmp_path / "sherlockode.toml"
     path.write_text(CONFIG)
     return path
 

@@ -1,8 +1,8 @@
 import pytest
 from jinja2 import UndefinedError
 
-from sherlockcode.agent.deps import InvestigationDeps
-from sherlockcode.agent.prompts import (
+from sherlockode.agent.deps import InvestigationDeps
+from sherlockode.agent.prompts import (
     _ENV,
     cli_agent_prompt,
     environment_description,
@@ -10,10 +10,10 @@ from sherlockcode.agent.prompts import (
     investigator_instructions,
     planner_instructions,
 )
-from sherlockcode.app import Application
-from sherlockcode.config.settings import Settings
-from sherlockcode.investigation.models import InvestigationPlan, InvestigationRequest, PlanStep
-from sherlockcode.investigation.recorder import InvestigationRecorder
+from sherlockode.app import Application
+from sherlockode.config.settings import Settings
+from sherlockode.investigation.models import InvestigationPlan, InvestigationRequest, PlanStep
+from sherlockode.investigation.recorder import InvestigationRecorder
 
 
 def test_investigator_instructions_render_without_variables() -> None:

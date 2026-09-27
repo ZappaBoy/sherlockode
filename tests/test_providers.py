@@ -7,15 +7,15 @@ import pytest
 from pydantic import ValidationError
 from pydantic_ai import PrefixedToolset
 
-from sherlockcode.config.models import ProviderConfig
-from sherlockcode.domain.activity import WorkItemQuery, WorkItemState
-from sherlockcode.domain.repository import RepositoryRef
-from sherlockcode.providers import ApiRequest, ProviderCapability, ProviderContext
-from sherlockcode.providers.github import GitHubProvider
-from sherlockcode.providers.gitlab import GitLabProvider
-from sherlockcode.providers.hosted import HostedProvider
-from sherlockcode.providers.http import ProviderHttpClient
-from sherlockcode.providers.mcp import build_mcp_toolset, uses_mcp, uses_native_tools
+from sherlockode.config.models import ProviderConfig
+from sherlockode.domain.activity import WorkItemQuery, WorkItemState
+from sherlockode.domain.repository import RepositoryRef
+from sherlockode.providers import ApiRequest, ProviderCapability, ProviderContext
+from sherlockode.providers.github import GitHubProvider
+from sherlockode.providers.gitlab import GitLabProvider
+from sherlockode.providers.hosted import HostedProvider
+from sherlockode.providers.http import ProviderHttpClient
+from sherlockode.providers.mcp import build_mcp_toolset, uses_mcp, uses_native_tools
 
 Handler = Callable[[httpx.Request], httpx.Response]
 

@@ -3,12 +3,12 @@ from pathlib import Path
 import pytest
 from typer.testing import CliRunner
 
-from sherlockcode.cli import app
+from sherlockode.cli import app
 
 
 @pytest.fixture
 def config_file(tmp_path: Path, remotes: dict[str, Path], clean_environment: None) -> Path:
-    path = tmp_path / "sherlockcode.toml"
+    path = tmp_path / "sherlockode.toml"
     includes = ", ".join(f'"{remote}"' for remote in remotes.values())
     path.write_text(
         f'workspace = "{tmp_path / "ws"}"\n[repositories]\ninclude = [{includes}]\n[groups]\npy = ["service-a"]\n'

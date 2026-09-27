@@ -1844,7 +1844,7 @@ wheels = [
 ]
 
 [[package]]
-name = "sherlockcode"
+name = "sherlockode"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

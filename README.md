@@ -1,14 +1,14 @@
-# sherlockcode
+# sherlockode
 
 An agent that investigates an organization's Git repositories on your behalf.
 
-Ask a question in natural language; Sherlockcode plans an investigation, decides which repositories,
+Ask a question in natural language; Sherlockode plans an investigation, decides which repositories,
 Git operations, provider APIs, analyzers and sandboxed computations it needs, collects evidence, and
 answers with conclusions you can trace back to a repository, file, line, commit, API call or command.
 
 ```console
 # illustrative output
-$ sherlockcode ask "How many projects use Python < 3.12?" --scope python
+$ sherlockode ask "How many projects use Python < 3.12?" --scope python
 # Investigation 2026-09-27-001
 
 **Question:** How many projects use Python < 3.12?
@@ -44,22 +44,22 @@ $ sherlockcode ask "How many projects use Python < 3.12?" --scope python
 
 ```bash
 uv sync
-cp sherlockcode.example.toml sherlockcode.toml   # edit repositories, providers, groups and agent backend
+cp sherlockode.example.toml sherlockode.toml   # edit repositories, providers, groups and agent backend
 cp .env.example .env                            # add ANTHROPIC_API_KEY / OPENAI_API_KEY and provider tokens
-docker build -f docker/sandbox.Dockerfile -t sherlockcode-sandbox:latest docker   # or `docker compose --profile build build`
+docker build -f docker/sandbox.Dockerfile -t sherlockode-sandbox:latest docker   # or `docker compose --profile build build`
 
-uv run sherlockcode repos                  # the catalog, after provider discovery
-uv run sherlockcode groups                 # logical groups
-uv run sherlockcode sync --scope backend   # optional: pre-clone repositories
-uv run sherlockcode ask "Which repositories have not been updated in the last six months?"
-uv run sherlockcode investigations list
-uv run sherlockcode investigations show 2026-09-27-001
+uv run sherlockode repos                  # the catalog, after provider discovery
+uv run sherlockode groups                 # logical groups
+uv run sherlockode sync --scope backend   # optional: pre-clone repositories
+uv run sherlockode ask "Which repositories have not been updated in the last six months?"
+uv run sherlockode investigations list
+uv run sherlockode investigations show 2026-09-27-001
 ```
 
 ## Configuration
 
 Precedence, highest first: **environment variables → `.env` → TOML → defaults**.
-The TOML file is `./sherlockcode.toml`, or the path in `REPO_AGENT_CONFIG` / `--config`.
+The TOML file is `./sherlockode.toml`, or the path in `REPO_AGENT_CONFIG` / `--config`.
 
 Any setting can be overridden with `REPO_AGENT_<SECTION>__<KEY>` (nested keys use a double
 underscore, e.g. `REPO_AGENT_SANDBOX__MEMORY=2g`, `REPO_AGENT_AGENT__BASE_URL=...`). Provider tokens
@@ -81,7 +81,7 @@ The full reference of every key, type, default and environment variable is in
 [`docs/architecture.md`](docs/architecture.md). Agent backend setup is detailed in
 [`docs/agent-backends.md`](docs/agent-backends.md).
 
-See [`sherlockcode.example.toml`](sherlockcode.example.toml) for a complete, commented example of every
+See [`sherlockode.example.toml`](sherlockode.example.toml) for a complete, commented example of every
 section below.
 
 ### Repository selection
@@ -158,7 +158,7 @@ planner, or explicitly with `--scope legacy`.
 
 `agent.backend` selects how the investigating agent runs. The CLI backends (`claude-code`, `codex`)
 **skip the planner** and run **read-only**, iterating over the checked-out repositories with the
-official CLI's own tool loop instead of Sherlockcode's native/MCP toolsets.
+official CLI's own tool loop instead of Sherlockode's native/MCP toolsets.
 
 **Anthropic or OpenAI via PydanticAI** (the default backend, in-process):
 
@@ -187,12 +187,12 @@ base_url = "http://localhost:11434/v1"  # Ollama; vLLM/LM Studio expose the same
 # api_key_env = "LOCAL_LLM_API_KEY"   # only if your server checks the key; most local servers need none
 ```
 
-When Sherlockcode itself runs in Docker, `localhost` refers to the container, not the host: point
+When Sherlockode itself runs in Docker, `localhost` refers to the container, not the host: point
 `base_url` at `http://host.docker.internal:11434/v1` and, on Linux, add to `compose.yaml`:
 
 ```yaml
 services:
-  sherlockcode:
+  sherlockode:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 ```
@@ -208,7 +208,7 @@ model = "claude-opus-5-5"        # optional; omit to use the CLI's own default
 cli_timeout_seconds = 600
 ```
 
-Authenticate the CLI itself before running Sherlockcode: either `claude login` once (credentials are
+Authenticate the CLI itself before running Sherlockode: either `claude login` once (credentials are
 cached under `~/.claude`) or set `ANTHROPIC_API_KEY` in the environment the CLI runs in.
 
 **Codex CLI** (skips the planner, read-only, uses `codex exec --sandbox read-only`):
@@ -221,22 +221,22 @@ cli_timeout_seconds = 600
 ```
 
 Authenticate with `codex login` (cached under `~/.codex`) or `OPENAI_API_KEY` in the environment. Do
-not add `--full-auto` to `agent.cli_args`: Sherlockcode always invokes Codex with
+not add `--full-auto` to `agent.cli_args`: Sherlockode always invokes Codex with
 `--sandbox read-only`, and `--full-auto` conflicts with that flag.
 
 ## CLI usage
 
 ```bash
-sherlockcode [--config PATH] ask "<question>" [--scope NAME ...] [--plan|--no-plan] [--json]
-sherlockcode [--config PATH] repos [--scope NAME ...]
-sherlockcode [--config PATH] groups
-sherlockcode [--config PATH] sync [--scope NAME ...]
-sherlockcode [--config PATH] config
-sherlockcode [--config PATH] investigations list
-sherlockcode [--config PATH] investigations show <investigation-id>
+sherlockode [--config PATH] ask "<question>" [--scope NAME ...] [--plan|--no-plan] [--json]
+sherlockode [--config PATH] repos [--scope NAME ...]
+sherlockode [--config PATH] groups
+sherlockode [--config PATH] sync [--scope NAME ...]
+sherlockode [--config PATH] config
+sherlockode [--config PATH] investigations list
+sherlockode [--config PATH] investigations show <investigation-id>
 ```
 
-- `--config` / `REPO_AGENT_CONFIG` selects the TOML file (default `./sherlockcode.toml`).
+- `--config` / `REPO_AGENT_CONFIG` selects the TOML file (default `./sherlockode.toml`).
 - `ask` investigates a question and prints an evidence-backed Markdown (or `--json`) report; the full
   investigation is also saved under `workspace/investigations/<id>/`.
 - `repos` lists the resolved catalog (name, provider, full path, tags, whether it is cloned yet),
@@ -259,23 +259,23 @@ repositories under investigation nor their hooks ever run outside the sandbox.
 ```bash
 docker compose --profile build build
 # equivalent to:
-docker build -t sherlockcode:latest .
-docker build -f docker/sandbox.Dockerfile -t sherlockcode-sandbox:latest docker
+docker build -t sherlockode:latest .
+docker build -f docker/sandbox.Dockerfile -t sherlockode-sandbox:latest docker
 ```
 
 To include the Claude Code and Codex CLIs in the application image (required for `backend =
 "claude-code"` / `"codex"`), build with `INSTALL_AGENT_CLIS=true`:
 
 ```bash
-docker build --build-arg INSTALL_AGENT_CLIS=true -t sherlockcode:latest .
+docker build --build-arg INSTALL_AGENT_CLIS=true -t sherlockode:latest .
 # or, with compose (compose.yaml reads it from the environment):
-INSTALL_AGENT_CLIS=true docker compose --profile build build sherlockcode
+INSTALL_AGENT_CLIS=true docker compose --profile build build sherlockode
 ```
 
 ### Prepare configuration
 
 ```bash
-cp sherlockcode.example.toml sherlockcode.toml
+cp sherlockode.example.toml sherlockode.toml
 cp .env.example .env
 ```
 
@@ -285,19 +285,19 @@ cp .env.example .env
 docker compose --profile build build   # once, or after changing the Dockerfiles
 
 DOCKER_GID=$(getent group docker | cut -d: -f3) \
-  docker compose run --rm sherlockcode repos
+  docker compose run --rm sherlockode repos
 
 DOCKER_GID=$(getent group docker | cut -d: -f3) \
-  docker compose run --rm sherlockcode sync --scope backend
+  docker compose run --rm sherlockode sync --scope backend
 
 DOCKER_GID=$(getent group docker | cut -d: -f3) \
-  docker compose run --rm sherlockcode ask "Who is the main contributor across our Python repositories?"
+  docker compose run --rm sherlockode ask "Who is the main contributor across our Python repositories?"
 
 DOCKER_GID=$(getent group docker | cut -d: -f3) \
-  docker compose run --rm sherlockcode investigations list
+  docker compose run --rm sherlockode investigations list
 ```
 
-`compose.yaml` mounts `./workspace` and `./sherlockcode.toml`, loads `.env`, and mounts the host Docker
+`compose.yaml` mounts `./workspace` and `./sherlockode.toml`, loads `.env`, and mounts the host Docker
 socket so the container can start sandbox containers on the host daemon (Docker-out-of-Docker).
 `DOCKER_GID` adds the container user to the host's `docker` group so it can use that socket; on a
 rootless Docker install this is usually unnecessary. `REPO_AGENT_SANDBOX__HOST_WORKSPACE` (already set
@@ -313,10 +313,10 @@ docker run --rm -it \
   --env-file .env \
   -e REPO_AGENT_SANDBOX__HOST_WORKSPACE="$PWD/workspace" \
   -v "$PWD/workspace:/workspace" \
-  -v "$PWD/sherlockcode.toml:/config/sherlockcode.toml:ro" \
+  -v "$PWD/sherlockode.toml:/config/sherlockode.toml:ro" \
   -v /var/run/docker.sock:/var/run/docker.sock \
   --group-add "$(getent group docker | cut -d: -f3)" \
-  sherlockcode:latest ask "Which repositories have not been updated in the last six months?"
+  sherlockode:latest ask "Which repositories have not been updated in the last six months?"
 ```
 
 ### Credentials for the CLI backends in Docker
@@ -328,13 +328,13 @@ container's home directory (`sherlock`, uid `10001`), or pass an API key through
 docker run --rm -it \
   --env-file .env \
   -v "$PWD/workspace:/workspace" \
-  -v "$PWD/sherlockcode.toml:/config/sherlockcode.toml:ro" \
+  -v "$PWD/sherlockode.toml:/config/sherlockode.toml:ro" \
   -v "$HOME/.claude:/home/sherlock/.claude" \
   -v "$HOME/.codex:/home/sherlock/.codex" \
-  sherlockcode:latest ask "..."
+  sherlockode:latest ask "..."
 ```
 
-or, in `compose.yaml`, add under `services.sherlockcode.volumes`:
+or, in `compose.yaml`, add under `services.sherlockode.volumes`:
 
 ```yaml
       # - ~/.claude:/home/sherlock/.claude
@@ -344,7 +344,7 @@ or, in `compose.yaml`, add under `services.sherlockcode.volumes`:
 ### Local LLM in Docker
 
 ```bash
-# sherlockcode.toml
+# sherlockode.toml
 # [agent]
 # base_url = "http://host.docker.internal:11434/v1"
 ```
@@ -352,14 +352,14 @@ or, in `compose.yaml`, add under `services.sherlockcode.volumes`:
 ```yaml
 # compose.yaml
 services:
-  sherlockcode:
+  sherlockode:
     extra_hosts:
       - "host.docker.internal:host-gateway"   # required on Linux; Docker Desktop provides it already
 ```
 
 ### Security notes
 
-- Agent-generated code never runs on the host: it runs in a disposable `sherlockcode-sandbox` container
+- Agent-generated code never runs on the host: it runs in a disposable `sherlockode-sandbox` container
   per execution, with `--network none`, a read-only root filesystem, the repository mounted read-only,
   `--cap-drop ALL`, `no-new-privileges`, a non-root user, and CPU/memory/PID limits (see
   [`docs/architecture.md`](docs/architecture.md#security-boundaries)).
@@ -376,15 +376,15 @@ services:
 ```bash
 uv sync
 uv run pytest
-uv run ruff check sherlockcode tests && uv run ruff format --check sherlockcode tests
-uv run mypy sherlockcode
-SHERLOCKCODE_SANDBOX_IMAGE=sherlockcode-sandbox:latest uv run pytest tests/test_sandbox.py   # Docker isolation test
+uv run ruff check sherlockode tests && uv run ruff format --check sherlockode tests
+uv run mypy sherlockode
+SHERLOCKODE_SANDBOX_IMAGE=sherlockode-sandbox:latest uv run pytest tests/test_sandbox.py   # Docker isolation test
 ```
 
 ## Project layout
 
 ```text
-sherlockcode/
+sherlockode/
 ├── cli.py                 Typer CLI (ask, repos, groups, sync, config, investigations)
 ├── app.py                 Composition root: wires settings, providers, workspace, git, sandbox
 ├── config/                Pydantic settings: TOML + .env + environment, config section models
